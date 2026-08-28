@@ -1,6 +1,7 @@
 """Typed API response models."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -75,3 +76,31 @@ class NetworkMetrics(ApiModel):
     inbound_bytes_per_second: float | None
     outbound_bytes_per_second: float | None
     interfaces: list[NetworkInterfaceMetrics]
+
+
+class TcpServiceCheck(ApiModel):
+    name: str
+    host: str
+    port: int
+    type: Literal["tcp"]
+    status: Literal["up", "down"]
+    response_time_ms: float
+    checked_at: datetime
+
+
+class HttpServiceCheck(ApiModel):
+    name: str
+    url: str
+    type: Literal["http", "https"]
+    status: Literal["up", "down"]
+    http_status_code: int | None
+    response_time_ms: float
+    checked_at: datetime
+
+
+class ServiceMetrics(ApiModel):
+    collected_at: datetime
+    total_services: int
+    services_up: int
+    services_down: int
+    services: list[TcpServiceCheck | HttpServiceCheck]

@@ -2,8 +2,9 @@
 
 from fastapi import FastAPI, HTTPException
 
-from app.models import AgentInfo, HealthStatus, NetworkMetrics, SystemMetrics
+from app.models import AgentInfo, HealthStatus, NetworkMetrics, ServiceMetrics, SystemMetrics
 from app.services.network_metrics import collect_network_metrics
+from app.services.service_checks import collect_service_metrics
 from app.services.system_metrics import collect_system_metrics, get_hostname, utc_now
 
 SERVICE_NAME = "NOC Monitor Agent"
@@ -55,3 +56,12 @@ def get_network_metrics() -> NetworkMetrics:
             status_code=500,
             detail="Unable to collect network telemetry",
         ) from exc
+
+
+@app.get("/api/services", response_model=ServiceMetrics)
+def get_service_metrics() -> ServiceMetrics:
+    """Return the current state of explicitly configured TCP and HTTP targets."""
+    try:
+        return collect_service_metrics()
+    except ValueError as exc:
+        raise HTTPException(status_code=500, detail=f"Invalid service check configuration: {exc}") from exc
